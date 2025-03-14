@@ -4,7 +4,7 @@ import os
 os.makedirs('channels', exist_ok=True)
 
 # Then write the file
-with open('playlist.m3u', 'w') as f:
+with open('/playlist.m3u', 'w') as f:
     f.write('\n'.join(playlist))
 
 import requests
