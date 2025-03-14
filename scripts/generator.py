@@ -1,3 +1,12 @@
+import os
+
+# Create channels directory if not exists
+os.makedirs('channels', exist_ok=True)
+
+# Then write the file
+with open('channels/playlist.m3u', 'w') as f:
+    f.write('\n'.join(playlist))
+
 import requests
 from bs4 import BeautifulSoup
 import os
