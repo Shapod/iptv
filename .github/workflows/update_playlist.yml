@@ -30,8 +30,8 @@ jobs:
     - name: Network diagnostics
       run: |
         echo "=== Network Check ==="
-        ping -c 3 172.16.172.114 || true
-        curl -v --connect-timeout 10 http://172.16.172.114/player.php?stream=ZeeBanglaHD 2>&1 | head -n 20
+        ping -c 3 172.20.2.5 || true
+        curl -v --connect-timeout 10 http://172.20.2.5/we/play.php?stream=ZEE-BANGLA 2>&1 | head -n 20
 
     - name: Generate playlist
       run: |
