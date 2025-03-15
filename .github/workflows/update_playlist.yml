@@ -2,57 +2,50 @@ name: Update IPTV Playlist
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Every 30 minutes
-  workflow_dispatch:         # Allow manual triggers
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
 
 jobs:
-  update-playlist:
+  update:
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
-    - name: Checkout repository
+    - name: Checkout repo
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
         persist-credentials: false
 
-    - name: Set up Python 3.10
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
         pip install -r scripts/requirements.txt
 
-    - name: Generate playlist file
+    - name: Generate playlist
       run: |
-        echo "=== Starting playlist generation ==="
         python scripts/generator.py
-        
-        echo "\n=== Verifying file creation ==="
-        ls -la channels/
-        
-        echo "\n=== Playlist content preview ==="
-        head -n 5 channels/playlist.m3u
+        echo "File content:"
+        head -n 3 channels/playlist.m3u
 
     - name: Commit and push changes
       env:
         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       run: |
-        # Configure git
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
-        # Verify changes
-        git status
+        # Set authentication URL
+        git remote set-url origin https://x-access-token:$GITHUB_TOKEN@github.com/${{ github.repository }}
         
-        # Only commit if changes exist
+        # Add and commit only if changes exist
         if [ -n "$(git status --porcelain)" ]; then
           git add channels/playlist.m3u
-          git commit -m "Auto-update playlist [$(date +'%Y-%m-%d %H:%M:%S')]"
+          git commit -m "Auto-update playlist $(date +'%Y-%m-%d %H:%M:%S')"
           git push origin main
           echo "Changes pushed successfully!"
         else
