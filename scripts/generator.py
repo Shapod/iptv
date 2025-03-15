@@ -5,6 +5,8 @@ import os
 BASE_URL = "http://172.16.172.114"
 CHANNELS = {
     "ZeeBanglaHD": "Zee Bangla HD",
+    "TSportsHD": "T Sports HD",
+    "channel24": "channel24",
     # Add more channels
 }
 
