@@ -1,83 +1,28 @@
-name: IPTV Playlist Updater
-
+name: Update Playlist
 on:
   schedule:
-    - cron: '*/30 * * * *'  # Every 30 minutes
+    - cron: '0 */2 * * *'  # Runs every 2 hours
   workflow_dispatch:
 
 jobs:
-  update-playlist:
+  update:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
       with:
-        fetch-depth: 0
-        persist-credentials: false
-
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-
+        python-version: '3.x'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r scripts/requirements.txt
-
-    - name: Network diagnostics
-      run: |
-        echo "=== Network Check ==="
-        ping -c 3 172.20.2.5 || true
-        curl -v --connect-timeout 10 http://172.20.2.5/we/play.php?stream=ZEE-BANGLA 2>&1 | head -n 20
-
-    - name: Generate playlist
-      run: |
-        echo "=== Starting Generator ==="
-        python scripts/generator.py
-        
-        echo "\n=== File Validation ==="
-        if [ ! -s channels/playlist.m3u ]; then
-          echo "Error: Playlist file is empty!"
-          exit 1
-        fi
-        
-        echo "\n=== Generated Content ==="
-        head -n 5 channels/playlist.m3u
-        echo "..."
-        tail -n 2 channels/playlist.m3u
-
-    - name: Collect debug artifacts
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: debug-files
-        path: |
-          debug_*.html
-          channels/playlist.m3u
-
-    - name: Commit and push changes
-      if: success()
-      env:
-        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        pip install requests beautifulsoup4
+    - name: Generate Playlist
+      run: python iptv_generator.py
+    - name: Commit changes
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        git remote set-url origin https://x-access-token:$GITHUB_TOKEN@github.com/${{ github.repository }}
-        
-        # Only commit if changes exist
-        if [ -n "$(git status --porcelain)" ]; then
-          git add channels/playlist.m3u
-          git commit -m "Auto-update: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-          git push origin main
-          echo "✅ Changes pushed successfully"
-        else
-          echo "🔄 No changes to commit"
-        fi
-
-    - name: Final status
-      run: |
-        echo "Workflow completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-        echo "View playlist: https://raw.githubusercontent.com/${{ github.repository }}/main/channels/playlist.m3u"
+        git add playlist.m3u
+        git commit -m "Update playlist"
+        git push
