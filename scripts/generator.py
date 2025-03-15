@@ -1,12 +1,3 @@
-import os
-
-# Create channels directory if not exists
-os.makedirs('channels', exist_ok=True)
-
-# Then write the file
-with open('channels/playlist.m3u', 'w') as f:
-    f.write('\n'.join(playlist))
-
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -18,21 +9,36 @@ CHANNELS = {
 }
 
 def generate_playlist():
+    """Generate the M3U playlist content"""
     playlist = ["#EXTM3U"]
     
     for channel_id, channel_name in CHANNELS.items():
         try:
-            r = requests.get(f"{BASE_URL}/player.php?stream={channel_id}", timeout=10)
-            soup = BeautifulSoup(r.text, 'html.parser')
-            m3u8_url = soup.find('source')['src']
-            playlist.append(f"#EXTINF:-1,{channel_name}\n{m3u8_url}")
+            r = requests.get(
+                f"{BASE_URL}/player.php?stream={channel_id}",
+                timeout=10
+            )
+            r.raise_for_status()
             
+            soup = BeautifulSoup(r.text, 'html.parser')
+            if source_tag := soup.find('source'):
+                playlist.append(f"#EXTINF:-1,{channel_name}\n{source_tag['src']}")
+            else:
+                print(f"No source tag found for {channel_id}")
+                
         except Exception as e:
-            print(f"Failed {channel_id}: {str(e)}")
+            print(f"Error processing {channel_id}: {str(e)}")
     
-    output_path = os.path.join('channels', 'playlist.m3u')
-    with open(output_path, 'w') as f:
-        f.write('\n'.join(playlist))
+    return '\n'.join(playlist)
 
 if __name__ == "__main__":
-    generate_playlist()
+    # Create directory if needed
+    os.makedirs('channels', exist_ok=True)
+    
+    # Generate and save playlist
+    playlist_content = generate_playlist()
+    
+    with open('channels/playlist.m3u', 'w') as f:
+        f.write(playlist_content)
+    
+    print("Playlist generated successfully!")
