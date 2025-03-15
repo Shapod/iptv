@@ -36,7 +36,19 @@ def fetch_channel_data(channel):
             time.sleep(2)
     
     return f"#EXTINF:-1,{channel['name']} [Unavailable]\n#EXTVLCOPT:no-http-reconnect\nhttp://0.0.0.0/unavailable\n"
-
+def discover_channels():
+    """Auto-discover available channels from server"""
+    try:
+        response = requests.get(f"{BASE_URL}/channel-list", timeout=5)  # Modify URL if needed
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Update this selector based on actual page structure
+        return [{"name": a.text, "id": a['href'].split('=')[1]} 
+                for a in soup.select('.channel-list a')]
+        
+    except Exception as e:
+        print(f"Channel discovery failed: {str(e)}")
+        return []
 @app.route('/playlist.m3u')
 def generate_playlist():
     """Generate dynamic playlist with parallel fetching"""
