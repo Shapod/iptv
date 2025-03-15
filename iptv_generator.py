@@ -5,9 +5,9 @@ import traceback
 import sys
 
 def fetch_playlist():
-    BASE_URL = "http://172.20.2.5/we/"
-    PLAY_URL_TEMPLATE = "http://172.20.2.5/we/play.php?stream={}"
-    M3U8_PATTERN = re.compile(r'http:\/\/172\.20\.2\.5:8082\/.*?\/index\.m3u8\?token=[^\'"]+')
+    BASE_URL = "http://bdixtv.live/we/"
+    PLAY_URL_TEMPLATE = "http://bdixtv.live/we/play.php?stream={}"
+    M3U8_PATTERN = re.compile(r'http(?:s?):\/\/[^\s\/$.?#]+\.[^\s]*\/.*?index\.m3u8\?token=[^\'"]+')
     
     try:
         print("Fetching main page...")
@@ -17,9 +17,9 @@ def fetch_playlist():
         }
         
         # Get main page content
-        main_page = requests.get(BASE_URL, headers=headers, timeout=10)
+        main_page = requests.get(BASE_URL, headers=headers, timeout=15)
         main_page.raise_for_status()
-        print("Main page fetched successfully")
+        print(f"Successfully connected to {BASE_URL}")
 
         # Parse channels
         soup = BeautifulSoup(main_page.text, 'html.parser')
@@ -52,7 +52,7 @@ def fetch_playlist():
             try:
                 print(f"{idx}/{len(channels)}: {channel_name}")
                 play_url = PLAY_URL_TEMPLATE.format(stream_id)
-                response = requests.get(play_url, headers=headers, timeout=10)
+                response = requests.get(play_url, headers=headers, timeout=15)
                 response.raise_for_status()
                 
                 # Find m3u8 URL
@@ -92,5 +92,4 @@ def fetch_playlist():
         traceback.print_exc()
         sys.exit(1)
 
-if __name__ == "__main__":
-    fetch_playlist()
+if __name__ == "__main
