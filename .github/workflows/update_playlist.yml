@@ -1,4 +1,4 @@
-name: Update Playlist
+name: Update IPTV Playlist
 
 on:
   schedule:
@@ -8,10 +8,13 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
       with:
+        fetch-depth: 0
         persist-credentials: false
 
     - name: Set up Python
@@ -26,16 +29,23 @@ jobs:
     - name: Generate playlist
       run: |
         python scripts/generator.py
-        ls -la channels/  # Verify file creation
+        echo "=== Generated Content ==="
+        head -n 5 channels/playlist.m3u
+        ls -la channels/
 
     - name: Commit changes
       env:
-        REPO_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        REPO_TOKEN: ${{ secrets.ACCESS_TOKEN }}  # Keep explicit secret name
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        git remote set-url origin https://x-access-token:${{ secrets.ACCESS_TOKEN }}@github.com/${{ github.repository }}
-        git add channels/playlist.m3u
-        git status  # Check which files are staged
-        git commit -m "Auto-update playlist"
-        git push
+        git remote set-url origin https://x-access-token:$REPO_TOKEN@github.com/${{ github.repository }}
+        
+        # Only commit if changes exist
+        if [ -n "$(git status --porcelain)" ]; then
+          git add channels/playlist.m3u
+          git commit -m "Auto-update playlist $(date +'%Y-%m-%d %H:%M')"
+          git push origin main
+        else
+          echo "No changes to commit"
+        fi
