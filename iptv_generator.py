@@ -93,3 +93,4 @@ def fetch_playlist():
         sys.exit(1)
 
 if __name__ == "__main__":
+    fetch_playlist()  # Properly indented
