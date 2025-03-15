@@ -12,6 +12,7 @@ BASE_URL = "http://172.16.172.114"
 PORT = "8083"
 CHANNELS = [
     {"name": "Zee Bangla HD", "id": "ZeeBanglaHD"},
+    {"name": "T Sports HD", "id": "TSportsHD"},
     # Add more channels here
 ]
 
@@ -63,6 +64,3 @@ def generate_playlist():
     print(f"Generated playlist in {time.time()-start_time:.2f}s")
     
     return Response(playlist, mimetype='audio/mpegurl')
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, threaded=True)
